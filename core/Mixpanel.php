@@ -2,6 +2,10 @@
 
 namespace li3_mixpanel\core;
 
+use lithium\analysis\Logger;
+use lithium\net\http\Service;
+
+
 /**
  * Client for sending data to Mixpanel
  *
@@ -75,25 +79,38 @@ class Mixpanel extends \lithium\core\StaticObject {
 			$data['properties']['token'] = static::$token;
 		}
 		$url = '/track/?data=' . base64_encode(json_encode($data));
-		$fp = fsockopen(static::$host, 80, $errno, $errstr, static::$timeout);
-		if ($errno != 0) {
-			// TODO: make something useful with error
-			return false;
-		}
-		$out = array();
-		$out[] = sprintf('GET %s HTTP/1.1', $url);
-		$out[] = sprintf('Host: %s', static::$host);
-		$out[] = 'Accept: */*';
-		$out[] = 'Connection: close';
-		$out[] = '';
-		$bytes = fwrite($fp, implode("\r\n", $out));
-		// $out  = "GET " . $url . " HTTP/1.1\r\n";
-		// $out .= "Host: " . static::$host . "\r\n";
-		// $out .= "Accept: */*\r\n";
-		// $out .= "Connection: close\r\n\r\n";
-		// $bytes = fwrite($fp, $out);
-		fclose($fp);
-		return ($bytes > 0);
+
+		//OMER: fsockopen's nice, but for some reason didn't work.
+		//using Service instead
+		$service = new Service( array(
+			'host' => 'api.mixpanel.com'
+		) );
+		$res = $service->get( $url );
+
+		// Logger::debug( 'mixpanel returned ' . $res );
+
+		return ( $res == 1 );
+
+		// $fp = fsockopen(static::$host, 80, $errno, $errstr, static::$timeout);
+		// if ($errno != 0) {
+		// 	// TODO: make something useful with error
+		// 	return false;
+		// }
+		// $out = array();
+		// $out[] = sprintf('GET %s HTTP/1.1', $url);
+		// $out[] = sprintf('Host: %s', static::$host);
+		// $out[] = 'Accept: */*';
+		// $out[] = 'Connection: close';
+		// $out[] = '';
+		// $bytes = fwrite($fp, implode("\r\n", $out));
+		// // $out  = "GET " . $url . " HTTP/1.1\r\n";
+		// // $out .= "Host: " . static::$host . "\r\n";
+		// // $out .= "Accept: */*\r\n";
+		// // $out .= "Connection: close\r\n\r\n";
+		// // $bytes = fwrite($fp, $out);
+		// fclose($fp);
+		// Logger::debug( 'mixpanel url: ' . $url );
+		// return ($bytes > 0);
 	}
 }
 
